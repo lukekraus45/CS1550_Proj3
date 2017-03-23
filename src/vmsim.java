@@ -73,13 +73,14 @@ public class vmsim {
 		
 		
 		if(algorithm.equalsIgnoreCase("opt")){
-			System.out.println("opt");
+			Opt.Opt(numFrames, traceFile);
 		}else if(algorithm.equalsIgnoreCase("clock")){
-			System.out.println("clock");
+			Clock.clock(numFrames, traceFile);
+			
 		}else if(algorithm.equalsIgnoreCase("nru")){
-			System.out.println("NRU");
+			NRU.NRU(numFrames, refresh, traceFile);
 		}else if(algorithm.equalsIgnoreCase("work")){
-			System.out.println("work");
+			Work.Work(numFrames, refresh, tau, traceFile);
 		}else{
 			throw new IllegalArgumentException("Please make sure you enter a valid algorithm: opt, clock, nru, work");
 		}
