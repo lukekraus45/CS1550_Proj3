@@ -91,11 +91,11 @@ public class Clock {
 				//System.out.println(temp.index);
 				if(read_or_write.equalsIgnoreCase("w")){
 					temp.dirty = true;
-					System.out.println("w");
+					//System.out.println("w");
 					
 				}else{
 					temp.dirty = false;
-					System.out.println("r");
+					//System.out.println("r");
 				}
 				
 				if(!temp.valid){
@@ -111,6 +111,7 @@ public class Clock {
 						temp.valid = true;//now in memory so its true
 						frames[frameCounter] = int_address;//add the address to the frame array
 						frameCounter++;
+						
 						//System.out.println(frameCounter);
 					}else if(frameCounter == numFrames){
 						//if they are == then we need to handle it by swapping it out
@@ -120,30 +121,29 @@ public class Clock {
 						while(not_evicted){
 							if(position == numFrames){
 								position = 0;//reset the position if it hits the end
+								//System.out.println("RESET");
 							}else if(position > numFrames){
 								//should not hit this 
 								System.out.println("Error: position of clock hand is > numFrames");
 							}
 							
+									
 							int temp_frame_num = frames[position];//get the page number of the frame that is at the clock hand position
 							
 							PageTableEntry temp_page = p_table.get(temp_frame_num);
-							int index = temp_page.index;
-								
-									
-									
-								
-							
-							if(p_table.get(index).referenced == true){
+								//get the page and check if it is able to be evicted 
+													
+							if(temp_page.referenced == true){
 								//if it is already set then we set it to false
-								p_table.get(index).referenced = false;
+								temp_page.referenced = false;
 							}else{
 								//if it is not set then we can evict it.
 								not_evicted = false;
 								temp_clock_position = position;
+								//temp_clock_position = position;
 								
 							}
-							
+							temp_clock_position = position;
 							position++;
 						}
 						
@@ -163,7 +163,6 @@ public class Clock {
 						evictPage.frame = 0;
 						
 
-						temp.frame = evictPage.frame;
 						temp.valid = true;
 
 						//put the updated page into the page table
