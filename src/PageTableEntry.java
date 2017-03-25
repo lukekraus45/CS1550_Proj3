@@ -1,7 +1,7 @@
 
 public class PageTableEntry {
 	
-	boolean present;
+	boolean valid;
 	boolean dirty;
 	boolean referenced;
 	int index;
@@ -12,7 +12,7 @@ public class PageTableEntry {
 		//just set the vlaues to false and index to 0 and frame to -1
 		
 		
-		this.present = false;
+		this.valid = false;
 		this.dirty = false;
 		this.referenced = false;
 		this.index = 0;
