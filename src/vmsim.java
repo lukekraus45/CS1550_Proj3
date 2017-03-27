@@ -75,8 +75,8 @@ public class vmsim {
 		if(algorithm.equalsIgnoreCase("opt")){
 			Opt.Opt(numFrames, traceFile);
 		}else if(algorithm.equalsIgnoreCase("clock")){
-			Clock.clock(numFrames, traceFile);
-			
+			//Clock.clock(numFrames, traceFile);
+			Clock.clock(numFrames,traceFile);
 		}else if(algorithm.equalsIgnoreCase("nru")){
 			NRU.NRU(numFrames, refresh, traceFile);
 		}else if(algorithm.equalsIgnoreCase("work")){

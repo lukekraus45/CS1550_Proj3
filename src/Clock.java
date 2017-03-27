@@ -1,7 +1,9 @@
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
@@ -10,6 +12,13 @@ public class Clock {
 
 	//impliment the clock functionality 
 	public static void clock(int numFrames, String traceFileName){
+		
+		try {
+			System.setOut(new PrintStream(new FileOutputStream("test2.txt")));
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		
 		int[] frames = new int[numFrames];//creates array with the number of frames
 		final int PT_SIZE_1MB = 1048576;//page table size
@@ -41,11 +50,11 @@ public class Clock {
 			e.printStackTrace();
 		}
 		//using a hashtable becuase of O(1) lookup time
-		Hashtable<Integer, PageTableEntry> p_table = new Hashtable<Integer, PageTableEntry>(PT_SIZE_1MB*PTE_SIZE_BYTES);
+		Hashtable<Integer, PageTableEntry> p_table = new Hashtable<Integer, PageTableEntry>(PT_SIZE_1MB);
 		//System.out.println(numMemAccess);
 	    
 		  //we need to add our pages to our Page Table p_table
-	    for(int i = 0; i < PT_SIZE_1MB*PTE_SIZE_BYTES; i++){
+	    for(int i = 0; i < PT_SIZE_1MB; i++){
 	    	PageTableEntry temp = new PageTableEntry();
 	    	p_table.put(i, temp);
 	    }
@@ -72,19 +81,24 @@ public class Clock {
 				StringBuilder s = new StringBuilder();
 				char[] char_array = address.toCharArray();
 				s.append("0x");
+				//s.append(address);
 				for(int i =0; i<5; i++){
 					s.append(char_array[i]);
 				}
 				//only need the first 5 bits (for the page table entry)
 				
-				//s.append(address);
+				
 				
 				
 				//System.out.println("Address: " + s.toString());
 				int int_address = Integer.decode(s.toString());//decodes the HEX into decimal
-			   
+				if(address.equalsIgnoreCase("004c2600")){
+					System.out.println("ER");
+
+				}
 				PageTableEntry temp = p_table.get(int_address);
 				//System.out.println(int_address);
+				
 				temp.referenced = true;
 				temp.index = int_address;
 				//check dirty bit
@@ -98,7 +112,7 @@ public class Clock {
 					//System.out.println("r");
 				}
 				
-				if(!temp.valid){
+				if(temp.valid == false){
 					//if valid bit is not set it is not yet it memory
 					//This means a pagefault has occured and we need to handle it
 					numPageFault++;
@@ -111,7 +125,7 @@ public class Clock {
 						temp.valid = true;//now in memory so its true
 						frames[frameCounter] = int_address;//add the address to the frame array
 						frameCounter++;
-						
+						System.out.println("Page Fault – no eviction at Location 0x" + address);
 						//System.out.println(frameCounter);
 					}else if(frameCounter == numFrames){
 						//if they are == then we need to handle it by swapping it out
@@ -146,12 +160,15 @@ public class Clock {
 							temp_clock_position = position;
 							position++;
 						}
-						
-						PageTableEntry evictPage = p_table.get(temp_clock_position);
+						int temp_frame_num = frames[temp_clock_position];
+						PageTableEntry evictPage = p_table.get(temp_frame_num);
 						if(evictPage.dirty){
 							//if the page is dirty then we need to write it to disk
 							numDiskWrites++;
-							
+							System.out.println("Page Fault – eviction (Dirty) at Location 0x" + address);
+
+						}else{
+							System.out.println("Page Fault – eviction (Clean) at Location 0x" + address);
 						}
 
 						//complete the swap
@@ -169,11 +186,6 @@ public class Clock {
 						p_table.put(frames[temp_clock_position], evictPage);
 						
 						
-						
-						
-						
-						
-						
 					}else{
 						System.out.println("Error: frameCounter > numFrames!!");
 					}
@@ -182,9 +194,11 @@ public class Clock {
 					
 				}else{
 					//If to goes here then it is already in memory so we can skip it
-					//System.out.println("Already in memory");//debugging
+					//System.out.println(temp.valid);
+					System.out.println("Hit at Location 0x"  + address);
+					debug++;
 				}
-				debug++;
+				//debug++;
 	            p_table.put(int_address, temp);
 				
 			}//end of reading file
