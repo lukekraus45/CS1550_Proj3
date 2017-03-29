@@ -13,12 +13,12 @@ public class Clock {
 	//impliment the clock functionality 
 	public static void clock(int numFrames, String traceFileName){
 		
-		try {
+		/*try {
 			System.setOut(new PrintStream(new FileOutputStream("test2.txt")));
 		} catch (FileNotFoundException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
-		}
+		}*/
 		
 		int[] frames = new int[numFrames];//creates array with the number of frames
 		final int PT_SIZE_1MB = 1048576;//page table size
@@ -55,8 +55,8 @@ public class Clock {
 	    
 		  //we need to add our pages to our Page Table p_table
 	    for(int i = 0; i < PT_SIZE_1MB; i++){
-	    	PageTableEntry temp = new PageTableEntry();
-	    	p_table.put(i, temp);
+	    	PageTableEntry temp_pg = new PageTableEntry();
+	    	p_table.put(i, temp_pg);
 	    }
 		
 		
@@ -69,7 +69,6 @@ public class Clock {
 	    int position = 0;//this will be used to track the position of the clock hand
 		try {
 			br = new BufferedReader(new FileReader(traceFileName));
-			int counter = 0;
 			while(br.ready()){
 				//go through the file and read in the data. We need to split it up.
 			
@@ -92,10 +91,7 @@ public class Clock {
 				
 				//System.out.println("Address: " + s.toString());
 				int int_address = Integer.decode(s.toString());//decodes the HEX into decimal
-				if(address.equalsIgnoreCase("004c2600")){
-					System.out.println("ER");
-
-				}
+				//System.out.println("int address + " + int_address);
 				PageTableEntry temp = p_table.get(int_address);
 				//System.out.println(int_address);
 				
@@ -106,6 +102,12 @@ public class Clock {
 				if(read_or_write.equalsIgnoreCase("w")){
 					temp.dirty = true;
 					//System.out.println("w");
+					
+						//if the page is dirty then we need to write it to disk
+						//numDiskWrites++;
+						//System.out.println("Page Fault – eviction (Dirty) at Location 0x" + address);
+
+					
 					
 				}else{
 					temp.dirty = false;
@@ -133,7 +135,7 @@ public class Clock {
 						boolean not_evicted = true;
 						int temp_clock_position =0;
 						while(not_evicted){
-							if(position == numFrames){
+							if(position % numFrames == 0){
 								position = 0;//reset the position if it hits the end
 								//System.out.println("RESET");
 							}else if(position > numFrames){
@@ -150,6 +152,7 @@ public class Clock {
 							if(temp_page.referenced == true){
 								//if it is already set then we set it to false
 								temp_page.referenced = false;
+								p_table.put(temp_frame_num, temp_page);
 							}else{
 								//if it is not set then we can evict it.
 								not_evicted = false;
@@ -157,7 +160,6 @@ public class Clock {
 								//temp_clock_position = position;
 								
 							}
-							temp_clock_position = position;
 							position++;
 						}
 						int temp_frame_num = frames[temp_clock_position];
@@ -172,7 +174,17 @@ public class Clock {
 						}
 
 						//complete the swap
+						frames[evictPage.frame] = temp.index;
+						temp.frame = evictPage.frame;
+						
+						temp.valid = true;
 						evictPage.dirty = false;
+						evictPage.referenced = false;
+						evictPage.valid = false;
+						evictPage.frame = -1;
+						p_table.put(temp_frame_num, evictPage);
+						
+						/*evictPage.dirty = false;
 						evictPage.valid = false;
 						evictPage.referenced = false;
 						frames[evictPage.frame] = temp.index;
@@ -180,10 +192,11 @@ public class Clock {
 						evictPage.frame = 0;
 						
 
-						temp.valid = true;
+						temp.valid = true;*/
 
 						//put the updated page into the page table
-						p_table.put(frames[temp_clock_position], evictPage);
+						
+						
 						
 						
 					}else{
@@ -197,6 +210,7 @@ public class Clock {
 					//System.out.println(temp.valid);
 					System.out.println("Hit at Location 0x"  + address);
 					debug++;
+					
 				}
 				//debug++;
 	            p_table.put(int_address, temp);

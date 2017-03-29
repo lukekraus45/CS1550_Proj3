@@ -11,7 +11,7 @@ public class vmsim {
 		int tau = 0;
 		
 		if(args.length == 5){
-			//this would use OPT or Clock and be length 5
+			//this would use Random, OPT or Clock and be length 5
 			if(!args[0].equalsIgnoreCase("-n")){
 				throw new IllegalArgumentException("Please enter -n followed by an integer value for the number of frames. Ex. -n 15");
 			}
@@ -42,29 +42,7 @@ public class vmsim {
 					
 			traceFile = args[6];
 
-		}else if(args.length == 9){
-			//this would be work and be lenth 9
-			if(!args[0].equalsIgnoreCase("-n")){
-				throw new IllegalArgumentException("Please enter -n followed by the number of frames. Ex. -n 10");
-			}
-			numFrames = Integer.parseInt(args[1]);
-			if(!args[2].equalsIgnoreCase("-a")){
-				throw new IllegalArgumentException("Please enter -a followed by the algorithm you wish to use");
-			}
-			algorithm = args[3];
-			if(!args[4].equalsIgnoreCase("-r")){
-				throw new IllegalArgumentException("Please enter -r followed by the refresh value");
-			}
-			refresh = Integer.parseInt(args[5]);
-			
-			if(!args[6].equalsIgnoreCase("-t")){
-				throw new IllegalArgumentException("Please enter -t followed by the tau value");
-			}
-			tau = Integer.parseInt(args[7]);
-			
-			traceFile = args[8];
-		
-		}	
+		}
 		else{
 			throw new IllegalArgumentException("Please enter command line args in correct form. Ex. -n 15 -a work -r 15 -t 10 gcc.trace");
 		}
@@ -79,8 +57,8 @@ public class vmsim {
 			Clock.clock(numFrames,traceFile);
 		}else if(algorithm.equalsIgnoreCase("nru")){
 			NRU.NRU(numFrames, refresh, traceFile);
-		}else if(algorithm.equalsIgnoreCase("work")){
-			Work.Work(numFrames, refresh, tau, traceFile);
+		}else if(algorithm.equalsIgnoreCase("random")){
+			Random.Random(numFrames, traceFile);
 		}else{
 			throw new IllegalArgumentException("Please make sure you enter a valid algorithm: opt, clock, nru, work");
 		}
