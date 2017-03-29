@@ -35,11 +35,11 @@ public class Clock {
 		int numMemAccess = 0;
 		int numPageFault = 0;
 		int frameCounter = 0;//tracks the number of frames currently used 
-		BufferedReader br;
+		BufferedReader buffered_reader;
 		//create a reader that will count the # of memAccess (or lines in file)
 		try {
-			br = new BufferedReader(new FileReader(traceFileName));
-			while(br.readLine() != null){
+			buffered_reader = new BufferedReader(new FileReader(traceFileName));
+			while(buffered_reader.readLine() != null){
 				numMemAccess++;
 			}
 		} catch (FileNotFoundException e) {
@@ -68,12 +68,12 @@ public class Clock {
 		 * */
 	    int position = 0;//this will be used to track the position of the clock hand
 		try {
-			br = new BufferedReader(new FileReader(traceFileName));
-			while(br.ready()){
+			buffered_reader = new BufferedReader(new FileReader(traceFileName));
+			while(buffered_reader.ready()){
 				//go through the file and read in the data. We need to split it up.
 			
 				//read in the value and split it up by the space
-				String line = br.readLine();
+				String line = buffered_reader.readLine();
 				String[] temp_array = line.split(" ");//split on space
 				String address = temp_array[0];
 				String read_or_write = temp_array[1];

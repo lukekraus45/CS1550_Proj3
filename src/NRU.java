@@ -7,6 +7,7 @@ import java.util.Hashtable;
 
 public class NRU {
 
+	@SuppressWarnings("null")
 	public static void NRU(int numFrames, int refreshRate, String traceFileName){
 		//intialize the variables to 0 that we will track for statistics
 				int[] frames = new int[numFrames];//creates array with the number of frames
@@ -17,18 +18,18 @@ public class NRU {
 				
 				
 			    int debug = 0;
-			  
+			    int reset_counter=0;//will keep tack if we need to reset or not
 				
 				//intialize the variables to 0 that we will track for statistics
 				int numDiskWrites = 0;
 				int numMemAccess = 0;
 				int numPageFault = 0;
 				int frameCounter = 0;//tracks the number of frames currently used 
-				BufferedReader br;
+				BufferedReader buffered_reader;
 				//create a reader that will count the # of memAccess (or lines in file)
 				try {
-					br = new BufferedReader(new FileReader(traceFileName));
-					while(br.readLine() != null){
+					buffered_reader = new BufferedReader(new FileReader(traceFileName));
+					while(buffered_reader.readLine() != null){
 						numMemAccess++;
 					}
 				} catch (FileNotFoundException e) {
@@ -56,12 +57,26 @@ public class NRU {
 				 * 
 				 * */
 				try {
-					br = new BufferedReader(new FileReader(traceFileName));
-					while(br.ready()){
+					buffered_reader = new BufferedReader(new FileReader(traceFileName));
+					while(buffered_reader.ready()){
+						
+						reset_counter++;
 						//go through the file and read in the data. We need to split it up.
 					
+						if(reset_counter % refreshRate == 0){
+							//this means that we need to reset all the frames
+							//to make their ref. bit 0 or false
+							for(int i = 0; i < numFrames; i++){
+								int temp_fNum = frames[i];
+								PageTableEntry temp = p_table.get(temp_fNum);
+								temp.referenced=false;
+							}
+						}
+						
+						
+						
 						//read in the value and split it up by the space
-						String line = br.readLine();
+						String line = buffered_reader.readLine();
 						String[] temp_array = line.split(" ");//split on space
 						String address = temp_array[0];
 						String read_or_write = temp_array[1];
@@ -119,11 +134,87 @@ public class NRU {
 								//System.out.println(frameCounter);
 							}else if(frameCounter == numFrames){
 								//if they are == then we need to handle it by swapping it out
-								//here we will run the random  alogirthm
+								//here we will run the NRU  alogirthm
+								/*We can evict pages that have R and D bit set to 0*/ 
+								int frame_counter = 0;
 								
-								int random_number = random.nextInt(numFrames);
-								int temp_frame_num = frames[random_number];
-								PageTableEntry evictPage = p_table.get(temp_frame_num);
+								//we will check all 4 classes. We want a page from class 1
+								//if we cant find one we will move to 2,3,4 in that order 
+								PageTableEntry evictPage_c1 = null;
+								PageTableEntry evictPage_c2 = null;
+								PageTableEntry evictPage_c3 = null;
+								PageTableEntry evictPage_c4 = null;
+
+								while(frame_counter < numFrames){
+									
+									//get temp page
+									 int temp_frame_num = frames[frame_counter];
+									 PageTableEntry tempPage = p_table.get(temp_frame_num);
+									 if(tempPage.referenced && tempPage.dirty && evictPage_c4 == null){
+										 //both set to 1 and haven't seen a page yet with the bits set as such
+										 //set the evict page to be the same 
+										 //class 4
+										 evictPage_c4 = new PageTableEntry();
+										 evictPage_c4.dirty = tempPage.dirty;
+										 evictPage_c4.referenced = tempPage.referenced;
+										 evictPage_c4.index = tempPage.index;
+										 evictPage_c4.frame = tempPage.frame;
+										 evictPage_c4.valid = tempPage.valid;
+										 
+									 }else if(tempPage.referenced && !tempPage.dirty && evictPage_c4 == null){
+										 //dirty set to 0, refrenced to 1 and haven't seen a page yet with the bits set as such
+										 //class 3
+										 evictPage_c3 = new PageTableEntry();
+										 evictPage_c3.dirty = tempPage.dirty;
+										 evictPage_c3.referenced = tempPage.referenced;
+										 evictPage_c3.index = tempPage.index;
+										 evictPage_c3.frame = tempPage.frame;
+										 evictPage_c3.valid = tempPage.valid;
+										 
+									 }else if(!tempPage.referenced && tempPage.dirty && evictPage_c4 == null){
+										 //dirty set to 1 referenced to 1 and haven't seen a page yet with the bits set as such
+										 //class 2
+										 evictPage_c2 = new PageTableEntry();
+
+										 evictPage_c2.dirty = tempPage.dirty;
+										 evictPage_c2.referenced = tempPage.referenced;
+										 evictPage_c2.index = tempPage.index;
+										 evictPage_c2.frame = tempPage.frame;
+										 evictPage_c2.valid = tempPage.valid;
+										 
+									 }else if(!tempPage.referenced && !tempPage.dirty){
+										 //both set to 0. Our desired result
+										 //c1 If this is hit we can stop the algorithm. 
+										 evictPage_c1 = new PageTableEntry();
+
+										 evictPage_c1.dirty = tempPage.dirty;
+										 evictPage_c1.referenced = tempPage.referenced;
+										 evictPage_c1.index = tempPage.index;
+										 evictPage_c1.frame = tempPage.frame;
+										 evictPage_c1.valid = tempPage.valid;
+										 break;
+									 }
+									
+									
+									
+									frame_counter++;
+								}
+								//after we have found our page that we want we check each class. If we find
+								//that 1 is null we move to 2 and so on. We want c1, c2, c3, then c4 in that order. 
+								PageTableEntry evictPage = new PageTableEntry();
+								if(evictPage_c1 != null){
+									evictPage = evictPage_c1;
+								}else if(evictPage_c2 != null){
+									evictPage = evictPage_c2;
+
+								}else if(evictPage_c3 != null){
+									evictPage = evictPage_c3;
+
+								}else {
+									evictPage = evictPage_c4;
+
+								}
+								//now that evictPage contains the page we are using check if it is clean or dirty
 								if(evictPage.dirty){
 									//if the page is dirty then we need to write it to disk
 									numDiskWrites++;
@@ -147,7 +238,7 @@ public class NRU {
 								temp.valid = true;
 
 								//put the updated page into the page table
-								p_table.put(temp_frame_num, evictPage);
+								p_table.put(evictPage.frame, evictPage);
 
 								
 								
