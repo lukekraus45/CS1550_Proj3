@@ -8,7 +8,7 @@ public class vmsim {
 		String algorithm = "";
 		String traceFile = "";
 		int refresh = 0;
-		int tau = 0;
+	
 		
 		if(args.length == 5){
 			//this would use Random, OPT or Clock and be length 5
@@ -53,9 +53,10 @@ public class vmsim {
 		if(algorithm.equalsIgnoreCase("opt")){
 			Opt.Opt(numFrames, traceFile);
 		}else if(algorithm.equalsIgnoreCase("clock")){
-			//Clock.clock(numFrames, traceFile);
+			
 			Clock.clock(numFrames,traceFile);
 		}else if(algorithm.equalsIgnoreCase("nru")){
+			//test.test(numFrames, traceFile, refresh);
 			NRU.NRU(numFrames, refresh, traceFile);
 		}else if(algorithm.equalsIgnoreCase("random")){
 			Random.Random(numFrames, traceFile);

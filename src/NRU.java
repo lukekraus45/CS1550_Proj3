@@ -1,14 +1,25 @@
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.PrintStream;
 import java.util.Hashtable;
 
 
 public class NRU {
 
-	@SuppressWarnings("null")
+	
+	
+	@SuppressWarnings("unused")
 	public static void NRU(int numFrames, int refreshRate, String traceFileName){
+		
+		/*try {
+			System.setOut(new PrintStream(new FileOutputStream("test2.txt")));
+		} catch (FileNotFoundException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}*/
 		//intialize the variables to 0 that we will track for statistics
 				int[] frames = new int[numFrames];//creates array with the number of frames
 				final int PT_SIZE_1MB = 1048576;//page table size
@@ -89,12 +100,15 @@ public class NRU {
 						}
 						//only need the first 5 bits (for the page table entry)
 						
-						
+						if(address.equalsIgnoreCase("0042e320")){
+							debug++;
+						}
 						
 						
 						//System.out.println("Address: " + s.toString());
 						int int_address = Integer.decode(s.toString());//decodes the HEX into decimal
 						//System.out.println("int address + " + int_address);
+						
 						PageTableEntry temp = p_table.get(int_address);
 						//System.out.println(int_address);
 						
@@ -150,7 +164,7 @@ public class NRU {
 									//get temp page
 									 int temp_frame_num = frames[frame_counter];
 									 PageTableEntry tempPage = p_table.get(temp_frame_num);
-									 if(tempPage.referenced && tempPage.dirty && evictPage_c4 == null){
+									 if(tempPage.referenced && tempPage.dirty && evictPage_c4 == null&& tempPage.valid){
 										 //both set to 1 and haven't seen a page yet with the bits set as such
 										 //set the evict page to be the same 
 										 //class 4
@@ -161,7 +175,7 @@ public class NRU {
 										 evictPage_c4.frame = tempPage.frame;
 										 evictPage_c4.valid = tempPage.valid;
 										 
-									 }else if(tempPage.referenced && !tempPage.dirty && evictPage_c4 == null){
+									 }else if(tempPage.referenced && !tempPage.dirty && evictPage_c3 == null && evictPage_c4 == null && tempPage.valid){
 										 //dirty set to 0, refrenced to 1 and haven't seen a page yet with the bits set as such
 										 //class 3
 										 evictPage_c3 = new PageTableEntry();
@@ -171,7 +185,7 @@ public class NRU {
 										 evictPage_c3.frame = tempPage.frame;
 										 evictPage_c3.valid = tempPage.valid;
 										 
-									 }else if(!tempPage.referenced && tempPage.dirty && evictPage_c4 == null){
+									 }else if(!tempPage.referenced && tempPage.dirty && evictPage_c2 == null&&  tempPage.valid){
 										 //dirty set to 1 referenced to 1 and haven't seen a page yet with the bits set as such
 										 //class 2
 										 evictPage_c2 = new PageTableEntry();
@@ -182,38 +196,56 @@ public class NRU {
 										 evictPage_c2.frame = tempPage.frame;
 										 evictPage_c2.valid = tempPage.valid;
 										 
-									 }else if(!tempPage.referenced && !tempPage.dirty){
+									 }else if(!tempPage.referenced && !tempPage.dirty&& tempPage.valid){
 										 //both set to 0. Our desired result
 										 //c1 If this is hit we can stop the algorithm. 
-										 evictPage_c1 = new PageTableEntry();
+										 //evictPage_c1 = new PageTableEntry();
+										 	evictPage_c1 = new PageTableEntry();
+				                           temp.frame = tempPage.frame;
+										 
+										 if(tempPage.dirty){
+												//if the page is dirty then we need to write it to disk
+												numDiskWrites++;
+												System.out.println("Page Fault – eviction (Dirty) at Location 0x" + address);
 
-										 evictPage_c1.dirty = tempPage.dirty;
-										 evictPage_c1.referenced = tempPage.referenced;
-										 evictPage_c1.index = tempPage.index;
-										 evictPage_c1.frame = tempPage.frame;
-										 evictPage_c1.valid = tempPage.valid;
-										 break;
+											}else{
+												System.out.println("Page Fault – eviction (Clean) at Location 0x" + address);
+											}
+										 
+										 
+										 frames[temp.frame] = temp.index;
+				                           tempPage.valid = false;
+				                           tempPage.dirty = false;
+				                           tempPage.referenced = false;
+				                           tempPage.frame = -1;
+				                           p_table.put(tempPage.index, tempPage);
+				                           temp.valid = true;
+				                           p_table.put(temp.index, temp);
+				                           
+				                           break;
 									 }
 									
 									
 									
 									frame_counter++;
 								}
+								
 								//after we have found our page that we want we check each class. If we find
 								//that 1 is null we move to 2 and so on. We want c1, c2, c3, then c4 in that order. 
 								PageTableEntry evictPage = new PageTableEntry();
-								if(evictPage_c1 != null){
-									evictPage = evictPage_c1;
-								}else if(evictPage_c2 != null){
+								if(evictPage_c1 == null){
+									
+									if(evictPage_c2 != null){
 									evictPage = evictPage_c2;
 
-								}else if(evictPage_c3 != null){
+									}else if(evictPage_c3 != null){
 									evictPage = evictPage_c3;
 
-								}else {
+									}else {
 									evictPage = evictPage_c4;
 
 								}
+								
 								//now that evictPage contains the page we are using check if it is clean or dirty
 								if(evictPage.dirty){
 									//if the page is dirty then we need to write it to disk
@@ -223,10 +255,18 @@ public class NRU {
 								}else{
 									System.out.println("Page Fault – eviction (Clean) at Location 0x" + address);
 								}
+			                     temp.frame = evictPage.frame;
 
 								//complete the swap
-								
-								
+					frames[temp.frame] = temp.index;
+                     evictPage.valid = false;
+                     evictPage.dirty = false;
+                     evictPage.frame = 0;
+                     evictPage.referenced = false;
+                     p_table.put(evictPage.index, evictPage);
+                     temp.valid = true;
+                     p_table.put(temp.index, temp);
+						/*		
 								evictPage.dirty = false;
 								evictPage.valid = false;
 								evictPage.referenced = false;
@@ -236,13 +276,13 @@ public class NRU {
 								
 
 								temp.valid = true;
-
+								
 								//put the updated page into the page table
 								p_table.put(evictPage.frame, evictPage);
-
+						*/
 								
 								
-								
+								}	
 							}else{
 								System.out.println("Error: frameCounter > numFrames!!");
 							}
