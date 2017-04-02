@@ -9,7 +9,7 @@ public class PageTableEntry {
 	
 	public PageTableEntry(){
 		//create the PTE object 
-		//just set the vlaues to false and index to 0 and frame to -1
+		//just set the vlaues to false and index to 0 and frame to 0
 		
 		
 		this.valid = false;
@@ -19,17 +19,7 @@ public class PageTableEntry {
 		this.frame = 0;
 	}
 	
-	public PageTableEntry(PageTableEntry copy){
-		//create the PTE object 
-		//just set the vlaues to false and index to 0 and frame to -1
-		
-		
-		 this.valid = copy.valid;
-		this.dirty = copy.dirty;
-		this.referenced = copy.referenced;
-		this.index = copy.index;
-		this.frame = copy.frame;
-	}
+
 
 	
 	

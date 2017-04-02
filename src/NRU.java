@@ -14,22 +14,16 @@ public class NRU {
 	@SuppressWarnings("unused")
 	public static void NRU(int numFrames, int refreshRate, String traceFileName){
 		
-		/*try {
-			System.setOut(new PrintStream(new FileOutputStream("test2.txt")));
-		} catch (FileNotFoundException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}*/
-		//intialize the variables to 0 that we will track for statistics
-				int[] frames = new int[numFrames];//creates array with the number of frames
-				final int PT_SIZE_1MB = 1048576;//page table size
-				final int PAGE_SIZE_4KB = 4096;//size of each page 
+		
+			//intialize the variables to 0 that we will track for statistics
+				int[] frames = new int[numFrames];
+				final int PT_SIZE_1MB = 1048576;
+				final int PAGE_SIZE_4KB = 4096;
 				final int PTE_SIZE_BYTES = 4;
-				java.util.Random random = new java.util.Random();
+		
 				
 				
-			    int debug = 0;
-			    int reset_counter=0;//will keep tack if we need to reset or not
+			    int reset_counter=0;
 				
 				//intialize the variables to 0 that we will track for statistics
 				int numDiskWrites = 0;
@@ -37,7 +31,8 @@ public class NRU {
 				int numPageFault = 0;
 				int frameCounter = 0;//tracks the number of frames currently used 
 				BufferedReader buffered_reader;
-				//create a reader that will count the # of memAccess (or lines in file)
+				
+				
 				try {
 					buffered_reader = new BufferedReader(new FileReader(traceFileName));
 					while(buffered_reader.readLine() != null){
@@ -52,7 +47,7 @@ public class NRU {
 				}
 				//using a hashtable becuase of O(1) lookup time
 				Hashtable<Integer, PageTableEntry> p_table = new Hashtable<Integer, PageTableEntry>(PT_SIZE_1MB);
-				//System.out.println(numMemAccess);
+				
 			    
 				  //we need to add our pages to our Page Table p_table
 			    for(int i = 0; i < PT_SIZE_1MB; i++){
@@ -94,41 +89,26 @@ public class NRU {
 						StringBuilder s = new StringBuilder();
 						char[] char_array = address.toCharArray();
 						s.append("0x");
-						//s.append(address);
+						
 						for(int i =0; i<5; i++){
 							s.append(char_array[i]);
 						}
-						//only need the first 5 bits (for the page table entry)
-						
-						if(address.equalsIgnoreCase("0042e320")){
-							debug++;
-						}
 						
 						
-						//System.out.println("Address: " + s.toString());
+						
+						
 						int int_address = Integer.decode(s.toString());//decodes the HEX into decimal
-						//System.out.println("int address + " + int_address);
 						
 						PageTableEntry temp = p_table.get(int_address);
-						//System.out.println(int_address);
-						
 						temp.referenced = true;
 						temp.index = int_address;
+						
 						//check dirty bit
-						//System.out.println(temp.index);
 						if(read_or_write.equalsIgnoreCase("w")){
 							temp.dirty = true;
-							//System.out.println("w");
-							
-								//if the page is dirty then we need to write it to disk
-								//numDiskWrites++;
-								//System.out.println("Page Fault – eviction (Dirty) at Location 0x" + address);
-
-							
 							
 						}else{
 							temp.dirty = false;
-							//System.out.println("r");
 						}
 						
 						if(temp.valid == false){
@@ -140,16 +120,14 @@ public class NRU {
 								//throughout the program. If the frameCounter = numFrames 
 								//then we need to run the algoirthm
 								//if it is less then we can just add without a problem
-								temp.frame = frameCounter;//set the frame that the page is in to the current frame value
-								temp.valid = true;//now in memory so its true
-								frames[frameCounter] = int_address;//add the address to the frame array
+								temp.frame = frameCounter;
+								temp.valid = true;
+								frames[frameCounter] = int_address;
 								frameCounter++;
 								System.out.println("Page Fault – no eviction at Location 0x" + address);
-								//System.out.println(frameCounter);
 							}else if(frameCounter == numFrames){
 								//if they are == then we need to handle it by swapping it out
 								//here we will run the NRU  alogirthm
-								/*We can evict pages that have R and D bit set to 0*/ 
 								int frame_counter = 0;
 								
 								//we will check all 4 classes. We want a page from class 1
@@ -199,7 +177,6 @@ public class NRU {
 									 }else if(!tempPage.referenced && !tempPage.dirty&& tempPage.valid){
 										 //both set to 0. Our desired result
 										 //c1 If this is hit we can stop the algorithm. 
-										 //evictPage_c1 = new PageTableEntry();
 										 	evictPage_c1 = new PageTableEntry();
 				                           temp.frame = tempPage.frame;
 										 
@@ -258,28 +235,15 @@ public class NRU {
 			                     temp.frame = evictPage.frame;
 
 								//complete the swap
-					frames[temp.frame] = temp.index;
-                     evictPage.valid = false;
-                     evictPage.dirty = false;
-                     evictPage.frame = 0;
-                     evictPage.referenced = false;
-                     p_table.put(evictPage.index, evictPage);
-                     temp.valid = true;
-                     p_table.put(temp.index, temp);
-						/*		
-								evictPage.dirty = false;
-								evictPage.valid = false;
-								evictPage.referenced = false;
-								frames[evictPage.frame] = temp.index;
-								temp.frame = evictPage.frame;
-								evictPage.frame = 0;
-								
-
-								temp.valid = true;
-								
-								//put the updated page into the page table
-								p_table.put(evictPage.frame, evictPage);
-						*/
+			                     frames[temp.frame] = temp.index;
+			                     evictPage.valid = false;
+			                     evictPage.dirty = false;
+			                     evictPage.frame = 0;
+			                     evictPage.referenced = false;
+			                     p_table.put(evictPage.index, evictPage);
+			                     temp.valid = true;
+			                     p_table.put(temp.index, temp);
+						
 								
 								
 								}	
@@ -291,12 +255,10 @@ public class NRU {
 							
 						}else{
 							//If to goes here then it is already in memory so we can skip it
-							//System.out.println(temp.valid);
+							
 							System.out.println("Hit at Location 0x"  + address);
-							debug++;
 							
 						}
-						//debug++;
 			            p_table.put(int_address, temp);
 						
 					}//end of reading file
@@ -312,7 +274,7 @@ public class NRU {
 				
 				
 				//print out the statistics 
-				//System.out.println("Debug " + debug);
+		
 				System.out.println("Algorithm: NRU");
 				System.out.println("Number of frames: \t" + numFrames);
 				System.out.println("Total Memory Accesses \t" +  numMemAccess);

@@ -11,12 +11,10 @@ public class Random {
 		//intialize the variables to 0 that we will track for statistics
 		int[] frames = new int[numFrames];//creates array with the number of frames
 		final int PT_SIZE_1MB = 1048576;//page table size
-		final int PAGE_SIZE_4KB = 4096;//size of each page 
-		final int PTE_SIZE_BYTES = 4;
+		
 		java.util.Random random = new java.util.Random();
 		
 		
-	    int debug = 0;
 	  
 		
 		//intialize the variables to 0 that we will track for statistics
@@ -40,7 +38,6 @@ public class Random {
 		}
 		//using a hashtable becuase of O(1) lookup time
 		Hashtable<Integer, PageTableEntry> p_table = new Hashtable<Integer, PageTableEntry>(PT_SIZE_1MB);
-		//System.out.println(numMemAccess);
 	    
 		  //we need to add our pages to our Page Table p_table
 	    for(int i = 0; i < PT_SIZE_1MB; i++){
@@ -58,7 +55,6 @@ public class Random {
 		try {
 			buffered_reader = new BufferedReader(new FileReader(traceFileName));
 			while(buffered_reader.ready()){
-				//go through the file and read in the data. We need to split it up.
 			
 				//read in the value and split it up by the space
 				String line = buffered_reader.readLine();
@@ -68,55 +64,44 @@ public class Random {
 				StringBuilder s = new StringBuilder();
 				char[] char_array = address.toCharArray();
 				s.append("0x");
-				//s.append(address);
 				for(int i =0; i<5; i++){
 					s.append(char_array[i]);
 				}
-				//only need the first 5 bits (for the page table entry)
 				
 				
 				
 				
-				//System.out.println("Address: " + s.toString());
 				int int_address = Integer.decode(s.toString());//decodes the HEX into decimal
-				//System.out.println("int address + " + int_address);
 				PageTableEntry temp = p_table.get(int_address);
-				//System.out.println(int_address);
 				
 				temp.referenced = true;
 				temp.index = int_address;
+				
 				//check dirty bit
-				//System.out.println(temp.index);
 				if(read_or_write.equalsIgnoreCase("w")){
 					temp.dirty = true;
-					//System.out.println("w");
-					
-						//if the page is dirty then we need to write it to disk
-						//numDiskWrites++;
-						//System.out.println("Page Fault – eviction (Dirty) at Location 0x" + address);
-
-					
 					
 				}else{
 					temp.dirty = false;
-					//System.out.println("r");
 				}
+				
 				
 				if(temp.valid == false){
 					//if valid bit is not set it is not yet it memory
 					//This means a pagefault has occured and we need to handle it
 					numPageFault++;
+					
 					if(frameCounter < numFrames){
 						//we will track the number of frames that are being used
 						//throughout the program. If the frameCounter = numFrames 
 						//then we need to run the algoirthm
 						//if it is less then we can just add without a problem
-						temp.frame = frameCounter;//set the frame that the page is in to the current frame value
-						temp.valid = true;//now in memory so its true
-						frames[frameCounter] = int_address;//add the address to the frame array
+						temp.frame = frameCounter;
+						temp.valid = true;
+						frames[frameCounter] = int_address;
 						frameCounter++;
 						System.out.println("Page Fault – no eviction at Location 0x" + address);
-						//System.out.println(frameCounter);
+						
 					}else if(frameCounter == numFrames){
 						//if they are == then we need to handle it by swapping it out
 						//here we will run the random  alogirthm
@@ -134,23 +119,14 @@ public class Random {
 						}
 
 						//complete the swap
-						
-						
 						evictPage.dirty = false;
 						evictPage.valid = false;
 						evictPage.referenced = false;
 						frames[evictPage.frame] = temp.index;
 						temp.frame = evictPage.frame;
 						evictPage.frame = 0;
-						
-
 						temp.valid = true;
-
-						//put the updated page into the page table
 						p_table.put(temp_frame_num, evictPage);
-
-						
-						
 						
 					}else{
 						System.out.println("Error: frameCounter > numFrames!!");
@@ -160,12 +136,12 @@ public class Random {
 					
 				}else{
 					//If to goes here then it is already in memory so we can skip it
-					//System.out.println(temp.valid);
+					
 					System.out.println("Hit at Location 0x"  + address);
-					debug++;
+					
 					
 				}
-				//debug++;
+				
 	            p_table.put(int_address, temp);
 				
 			}//end of reading file
@@ -181,8 +157,7 @@ public class Random {
 		
 		
 		//print out the statistics 
-		//System.out.println("Debug " + debug);
-		System.out.println("Algorithm: Clock");
+		System.out.println("Algorithm: Random");
 		System.out.println("Number of frames: \t" + numFrames);
 		System.out.println("Total Memory Accesses \t" +  numMemAccess);
 		System.out.println("Total Page Faults: \t" + numPageFault);

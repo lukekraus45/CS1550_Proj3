@@ -44,7 +44,7 @@ public class vmsim {
 
 		}
 		else{
-			throw new IllegalArgumentException("Please enter command line args in correct form. Ex. -n 15 -a work -r 15 -t 10 gcc.trace");
+			throw new IllegalArgumentException("Please enter command line args in correct form. Ex. -n 15 -a work -r 15 gcc.trace");
 		}
 		
 
@@ -56,12 +56,11 @@ public class vmsim {
 			
 			Clock.clock(numFrames,traceFile);
 		}else if(algorithm.equalsIgnoreCase("nru")){
-			//test.test(numFrames, traceFile, refresh);
 			NRU.NRU(numFrames, refresh, traceFile);
 		}else if(algorithm.equalsIgnoreCase("random")){
 			Random.Random(numFrames, traceFile);
 		}else{
-			throw new IllegalArgumentException("Please make sure you enter a valid algorithm: opt, clock, nru, work");
+			throw new IllegalArgumentException("Please make sure you enter a valid algorithm: opt, clock, nru, random");
 		}
 		
 		
